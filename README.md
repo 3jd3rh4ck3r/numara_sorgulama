@@ -7,4 +7,4 @@ USE =python3 numara_sorgulama.pyc
 Şeklinde kullanabilirsiniz.
 
 NOY:Ek olarak bir şey belirtmek İstiyorum termux ile çalışmaz sadece linux ile 
-uyumludur. O yüzden deneyin. Çünkü çalışmaz.
+uyumludur. O yüzden denemeyin. Çünkü çalışmaz.
