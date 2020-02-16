@@ -6,5 +6,5 @@ ve bütün linux dağıtımlarda kullanabilirsini,
 USE =python3 numara_sorgulama.pyc
 Şeklinde kullanabilirsiniz.
 
-NOY:Ek olarak bir şey belirtmek İstiyorum termux ile çalışmaz sadece linux ile 
+NOT:Ek olarak bir şey belirtmek İstiyorum termux ile çalışmaz sadece linux ile 
 uyumludur. O yüzden denemeyin. Çünkü çalışmaz.
