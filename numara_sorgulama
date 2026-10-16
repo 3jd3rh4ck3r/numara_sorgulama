@@ -1,0 +1,125 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+
+URL = "https://www.nosorgulama.com/tel/"
+
+
+def main():
+    print("=" * 40)
+    print("       NUMARA SORGULAMA")
+    print("=" * 40)
+
+    numara = input("Telefon numarasini girin: ").strip()
+
+    if not numara:
+        print("Hata: Numara bos olamaz.")
+        return
+
+    oturum = requests.Session()
+    oturum.headers.update({
+        "User-Agent": "Mozilla/5.0"
+    })
+
+    try:
+        cevap = oturum.get(URL, timeout=20)
+        cevap.raise_for_status()
+
+        soup = BeautifulSoup(cevap.text, "html.parser")
+
+        form_bulundu = None
+        alan_bulundu = None
+
+        for form in soup.find_all("form"):
+            for alan in form.find_all("input"):
+                bilgi = " ".join([
+                    alan.get("name", ""),
+                    alan.get("id", ""),
+                    alan.get("placeholder", ""),
+                    alan.get("type", "")
+                ]).lower()
+
+                if any(kelime in bilgi for kelime in (
+                    "tel", "telefon", "numara",
+                    "phone", "search", "arama"
+                )):
+                    form_bulundu = form
+                    alan_bulundu = alan
+                    break
+
+            if form_bulundu:
+                break
+
+        if not form_bulundu:
+            print("Arama formu bulunamadi.")
+            print("Site JavaScript kullaniyor olabilir.")
+            print("Ana sayfa:", cevap.url)
+            return
+
+        alan_adi = alan_bulundu.get("name")
+
+        if not alan_adi:
+            print("Arama alaninin adi bulunamadi.")
+            return
+
+        veri = {}
+
+        for alan in form_bulundu.find_all("input"):
+            ad = alan.get("name")
+            tip = (alan.get("type") or "").lower()
+
+            if ad and tip not in (
+                "submit", "button", "file", "image"
+            ):
+                veri[ad] = alan.get("value", "")
+
+        veri[alan_adi] = numara
+
+        hedef = urljoin(
+            cevap.url,
+            form_bulundu.get("action") or cevap.url
+        )
+
+        yontem = (
+            form_bulundu.get("method") or "get"
+        ).lower()
+
+        if yontem == "post":
+            sonuc = oturum.post(
+                hedef, data=veri, timeout=20
+            )
+        else:
+            sonuc = oturum.get(
+                hedef, params=veri, timeout=20
+            )
+
+        sonuc.raise_for_status()
+
+        sayfa = BeautifulSoup(
+            sonuc.text, "html.parser"
+        )
+
+        for oge in sayfa.select(
+            "script, style, noscript"
+        ):
+            oge.decompose()
+
+        metin = sayfa.get_text(
+            separator="\n",
+            strip=True
+        )
+
+        print("\n--- SONUC ---\n")
+        print(metin[:12000] or "Sayfada metin bulunamadi.")
+        print("\nSonuc adresi:", sonuc.url)
+
+    except requests.RequestException as hata:
+        print("Baglanti hatasi:", hata)
+
+
+if __name__ == "__main__":
+    main()
+
